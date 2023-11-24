@@ -13,13 +13,42 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description>Dashwave Cloud Build plugin to fire builds on dashwave cloud. To get started, visit dashwave.io</description>
+    <description><![CDATA[
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+            </style>
+        </head>
+        <body>
+            <h2>Dashwave Cloud Build</h1>
+            <p>
+                Dashwave Cloud Build Plugin provides access to Dashwave's collaborative build tool for Android developers
+                for your local WIP codebases. Leverage the benefits of a fast and cached remote build engine supported with
+                emulators to speed up your workflow. Head over to <a href="https://dashwave.io">Dashwave</a> to know more and
+                <a href="https://console.dashwave.io">Dashwave Console</a> to sign up and get started!
+            </p>
+
+            <b>Pre-requisites:</b>
+            <ul>
+                <li>You have signed up on <a href="https://console.dashwave.io">Dashwave Console</a></li>
+                <li>Your local project is configured with Dashwave. <a href="https://dashwave.io/docs/getting-started/dw-cli">Learn how to get started</a></li>
+            </ul>
+
+            <b>How to use:</b>
+            <ul>
+                <li>With this plugin installed in Android Studio, open your project and hit the <i>DW Build</i> button from the toolbar</li>
+                <li>Sit back and relax! Your local project will build on our cloud, with logs available in Dashwave window that pops up from the bottom</li>
+                <li>Incase of a successful build, a dashwave emulator should open, where you can preview your app</li>
+                <li>Your can head over to your project on <a href="https://console.dashwave.io">console</a> for all build details</li>
+            </ul>
+        </body>
+        </html>
+    ]]></description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.platform</depends>
-
-    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.androidstudio</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
