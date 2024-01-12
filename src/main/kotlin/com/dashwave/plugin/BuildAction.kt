@@ -8,6 +8,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.wm.ToolWindowManager
+import java.util.Optional
 
 class BuildAction: AnAction() {
 
@@ -15,33 +16,32 @@ class BuildAction: AnAction() {
         super.update(e)
     }
 
-    override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project ?: return
+    private var buildProcHandler: ProcessHandler? = null
 
+    fun initBuildProcHandler(basePath: String?) {
         val decoder = AnsiEscapeDecoder()
+        var buildCmd = "dw build --plugin"
+        if (DashwaveWindow.cleanBuild) {
+            buildCmd += " --clean"
+        }
+        if (DashwaveWindow.debugEnabled) {
+            buildCmd += " --debug"
+        }
+        val cmd = GeneralCommandLine("/bin/bash","-c",buildCmd)
 
-        val cmd = GeneralCommandLine("/bin/bash","-c","dw build")
-
-        cmd.setWorkDirectory(project.basePath)
+        cmd.setWorkDirectory(basePath)
         val homeValue = System.getenv("HOME")
         val pathValue = System.getenv("PATH")
         cmd.withEnvironment("PATH", "${pathValue}:${homeValue}/.dw-cli/tools/:${homeValue}/.dw-cli/bin/")
 
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        val myWindow = toolWindowManager.getToolWindow("Dashwave")
-        myWindow?.show()
-
-
-        val console = DashwaveWindow.getConsole()
-        console.clear()
         val processHandler: ProcessHandler
         var emulatorURL: String? = null
         try {
             processHandler = OSProcessHandler(cmd)
-//            console.attachToProcess(processHandler)
             processHandler.addProcessListener(object : ProcessAdapter() {
                 override fun processTerminated(event: ProcessEvent) {
-                    // Handle process termination if needed
+                    DashwaveWindow.enableRunButton()
+                    DashwaveWindow.disableCancelButton()
                 }
                 override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                     val patternEmulatorConnection = """\s*EMULATOR CONNECTED SUCCESSFULLY (.+)""".toRegex()
@@ -53,36 +53,54 @@ class BuildAction: AnAction() {
                         val emulatorCmd = "dw scrcpy ${emulatorURL}"
                         try {
                             val processBuilder = Process(emulatorCmd)
-                            val process = processBuilder.pb.start()
-                            process.inputStream.bufferedReader().use { reader ->
-                                while (true) {
-                                    val line = reader.readLine() ?: break
-                                    DashwaveWindow.displayOutput(line, ConsoleViewContentType.NORMAL_OUTPUT)
-                                }
-                            }
-
-                            process.waitFor()  // Wait for the process to finish, you can remove this if not needed.
+                            processBuilder.start()
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
-                    decoder.escapeText(event.text, outputType, { text, attributes ->
+                    decoder.escapeText(event.text, outputType) { text, attributes ->
                         DashwaveWindow.displayOutput(text, ConsoleViewContentType.getConsoleViewType(attributes))
-                    })
+                    }
                 }
             })
-            processHandler.startNotify()
+            buildProcHandler = processHandler
         } catch (e: ExecutionException) {
             DashwaveWindow.displayOutput(
                 "Error executing command: ${e.localizedMessage}\n",
                 ConsoleViewContentType.ERROR_OUTPUT
             )
         }
+    }
 
+    fun startBuildProcHandler() {
+        buildProcHandler?.startNotify()
+    }
 
+    fun terminateBuildProcHandler(basePath: String?) {
+        buildProcHandler?.destroyProcess()
+        val emulatorCmd = "dw stop-build"
+        try {
+            val processBuilder = Process(emulatorCmd)
+            processBuilder.setCmdBasePath(basePath)
+            processBuilder.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        DashwaveWindow.getConsole().print("Build Cancelled\n", ConsoleViewContentType.ERROR_OUTPUT)
+    }
 
-//        val executor = DefaultRunExecutor.getRunExecutorInstance()
-//        RunContentManager.getInstance(project).showRunContent(executor, descriptor)
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val myWindow = toolWindowManager.getToolWindow("Dashwave")
+        myWindow?.show()
+
+        val console = DashwaveWindow.getConsole()
+        DashwaveWindow.enableCancelButton()
+        DashwaveWindow.disableRunButton()
+        console.clear()
+        initBuildProcHandler(project.basePath)
+        startBuildProcHandler()
     }
 
     // Override getActionUpdateThread() when you target 2022.3 or later!

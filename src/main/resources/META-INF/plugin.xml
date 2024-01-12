@@ -48,18 +48,20 @@
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.androidstudio</depends>
+<!--    <depends>com.intellij.modules.androidstudio</depends>-->
+    <depends>com.intellij.modules.all</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Dashwave"
+                    icon="icons/dashwave13.svg"
                     factoryClass="com.dashwave.plugin.DashwaveWindow"/>
     </extensions>
     <actions>
         <action id="com.dashwave.plugin.BuildAction" class="com.dashwave.plugin.BuildAction" text="DW Build"
-                description="dw-build" icon="icons/dashwave.svg">
-            <add-to-group group-id="NavBarToolBar" anchor="first"/>
+                description="dw-build" icon="icons/dashwave16.svg">
+            <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunnerActions"/>
         </action>
     </actions>
 </idea-plugin>
