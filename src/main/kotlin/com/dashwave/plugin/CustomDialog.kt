@@ -5,6 +5,7 @@ import com.intellij.openapi.util.IconLoader
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.Action
 
 class MyCustomDialog : DialogWrapper(true) {
     init {
@@ -24,5 +25,11 @@ class MyCustomDialog : DialogWrapper(true) {
         dialogPanel.add(JLabel("Click the 'dw build' icon in the toolbar to start a cloud build."))
 
         return dialogPanel
+    }
+
+    override fun createActions(): Array<Action> {
+        // Create a custom "OK" button
+        val okButton = okAction
+        return arrayOf(okButton)
     }
 }

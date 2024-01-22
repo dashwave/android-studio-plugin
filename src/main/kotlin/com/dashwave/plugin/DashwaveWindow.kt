@@ -91,17 +91,8 @@ class DashwaveWindow : ToolWindowFactory {
             buildAction?.terminateBuildProcHandler(project.basePath)
         }
 
-        val retryButton = JButton(AllIcons.Actions.Refresh)
-        retryButton.addActionListener{
-            val path = project.basePath
-            if(path != null){
-                checkDW(path, project)
-            }
-        }
-
         actionToolbar.add(runButton)
         actionToolbar.add(cancelButton)
-        actionToolbar.add(retryButton)
         disableCancelButton()
         disableRunButton()
 

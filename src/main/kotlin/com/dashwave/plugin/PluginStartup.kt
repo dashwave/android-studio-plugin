@@ -105,7 +105,6 @@ fun verifyLogin(pwd:String){
 
            DashwaveWindow.show()
 
-            TODO("add a don't show again")
             val dd = MyCustomDialog()
             dd.show()
         }else {
@@ -127,7 +126,11 @@ fun loginUser(pwd:String) {
         print("user logged in successfully")
 
         if (doesFileExist("$pwd/dashwave.yml")){
+
             DashwaveWindow.enableRunButton()
+            print("aagaya yahaa")
+            val dd = MyCustomDialog()
+            dd.show()
         }else {
             openCreateProjectDialog(pwd)
         }
@@ -198,7 +201,10 @@ fun createProject(projectName: String, devStack:String, rootDir:String, pwd:Stri
         val dd = MyCustomDialog()
         dd.show()
     }else{
-        print("project creation failed")
-        TODO("handle project creation failure")
+        DashwaveWindow.displayOutput("❌ Dashwave project creation failed\n", ConsoleViewContentType.ERROR_OUTPUT)
+        var hyperlink = HyperlinkInfo { p: Project ->
+            openCreateProjectDialog(pwd)
+        }
+        DashwaveWindow.getConsole().printHyperlink("Please try again\n\n", hyperlink)
     }
 }

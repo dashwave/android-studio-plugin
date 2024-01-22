@@ -2,6 +2,7 @@ package com.dashwave.plugin
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.filters.HyperlinkInfo
 import com.intellij.execution.process.*
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.actionSystem.AnAction
@@ -48,6 +49,12 @@ class BuildAction: AnAction() {
             processHandler = OSProcessHandler(cmd)
             processHandler.addProcessListener(object : ProcessAdapter() {
                 override fun processTerminated(event: ProcessEvent) {
+                    if (event.exitCode != 0) {
+                        var hyperlink = HyperlinkInfo{p:Project ->
+                            DashwaveWindow.runButton.doClick()
+                        }
+                        DashwaveWindow.getConsole().printHyperlink("\nPlease try again!", hyperlink)
+                    }
                     DashwaveWindow.enableRunButton()
                     DashwaveWindow.disableCancelButton()
                 }
