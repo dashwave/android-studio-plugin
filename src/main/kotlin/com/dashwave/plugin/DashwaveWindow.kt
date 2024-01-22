@@ -22,20 +22,31 @@ import javax.swing.JLabel
 class DashwaveWindow : ToolWindowFactory {
     companion object {
         private lateinit var console: ConsoleView
-        private lateinit var runButton: JButton
+        lateinit var runButton: JButton
         private lateinit var cancelButton: JButton
+        private lateinit var p: Project
+
+        var runEnabled = false
+        fun show(){
+            val toolWindowManager = ToolWindowManager.getInstance(this.p)
+            val myWindow = toolWindowManager.getToolWindow("Dashwave")
+            myWindow?.show()
+        }
+
         fun displayOutput(s:String, type: ConsoleViewContentType){
-            console.print(s,type)
+            console.print(s, type)
         }
         fun getConsole():ConsoleView {
             return console
         }
 
         fun disableRunButton(){
+            this.runEnabled = false
             runButton.isEnabled = false
         }
 
         fun enableRunButton(){
+            this.runEnabled = true
             runButton.isEnabled = true
         }
 
@@ -54,7 +65,7 @@ class DashwaveWindow : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val panel = JPanel(BorderLayout())
-
+        p = project
         // Set up the toolbar with a button
         val actionToolbar = JToolBar(JToolBar.HORIZONTAL)
 
@@ -65,8 +76,12 @@ class DashwaveWindow : ToolWindowFactory {
             disableRunButton()
             enableCancelButton()
             buildAction = BuildAction()
-            buildAction?.initBuildProcHandler(project.basePath)
-            buildAction?.startBuildProcHandler()
+            val pwd = project.basePath
+            if (pwd != null ){
+                buildAction?.initBuildProcHandler(pwd)
+                buildAction?.startBuildProcHandler()
+            }
+
         }
 
         cancelButton = JButton(AllIcons.Actions.Cancel)
@@ -76,9 +91,19 @@ class DashwaveWindow : ToolWindowFactory {
             buildAction?.terminateBuildProcHandler(project.basePath)
         }
 
+        val retryButton = JButton(AllIcons.Actions.Refresh)
+        retryButton.addActionListener{
+            val path = project.basePath
+            if(path != null){
+                checkDW(path, project)
+            }
+        }
+
         actionToolbar.add(runButton)
         actionToolbar.add(cancelButton)
+        actionToolbar.add(retryButton)
         disableCancelButton()
+        disableRunButton()
 
         val optionToolbar = JToolBar(JToolBar.VERTICAL)
         val optionTitle = JLabel("Build Options")

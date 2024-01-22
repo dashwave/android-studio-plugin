@@ -6,6 +6,7 @@ import com.intellij.execution.process.*
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.wm.ToolWindowManager
 import java.util.Optional
@@ -14,13 +15,20 @@ class BuildAction: AnAction() {
 
     override fun update(e: AnActionEvent) {
         super.update(e)
+        val presentation = e.presentation
+
+        // Enable or disable the action based on your condition
+        presentation.isEnabled = DashwaveWindow.runEnabled
+        presentation.text = "dw build"
+        presentation.description = "run a build on dashwave cloud"
     }
+
 
     private var buildProcHandler: ProcessHandler? = null
 
-    fun initBuildProcHandler(basePath: String?) {
+    fun initBuildProcHandler(basePath: String) {
         val decoder = AnsiEscapeDecoder()
-        var buildCmd = "dw build --plugin"
+        var buildCmd = "dw plugin-build --pwd=$basePath"
         if (DashwaveWindow.cleanBuild) {
             buildCmd += " --clean"
         }
@@ -53,7 +61,7 @@ class BuildAction: AnAction() {
                         val emulatorCmd = "dw scrcpy ${emulatorURL}"
                         try {
                             val processBuilder = Process(emulatorCmd)
-                            processBuilder.start()
+                            processBuilder.start(true)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -82,7 +90,7 @@ class BuildAction: AnAction() {
         try {
             val processBuilder = Process(emulatorCmd)
             processBuilder.setCmdBasePath(basePath)
-            processBuilder.start()
+            processBuilder.start(true)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -99,8 +107,11 @@ class BuildAction: AnAction() {
         DashwaveWindow.enableCancelButton()
         DashwaveWindow.disableRunButton()
         console.clear()
-        initBuildProcHandler(project.basePath)
-        startBuildProcHandler()
+        val pwd = project.basePath
+        if (pwd != null) {
+            initBuildProcHandler(pwd)
+            startBuildProcHandler()
+        }
     }
 
     // Override getActionUpdateThread() when you target 2022.3 or later!

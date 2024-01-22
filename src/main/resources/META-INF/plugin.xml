@@ -57,6 +57,8 @@
         <toolWindow id="Dashwave"
                     icon="icons/dashwave13.svg"
                     factoryClass="com.dashwave.plugin.DashwaveWindow"/>
+        <postStartupActivity implementation="com.dashwave.plugin.PluginStartup"/>
+        <notificationGroup id="YourPluginNotificationGroup" displayType="BALLOON" toolWindowId=""/>
     </extensions>
     <actions>
         <action id="com.dashwave.plugin.BuildAction" class="com.dashwave.plugin.BuildAction" text="DW Build"
