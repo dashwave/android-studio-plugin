@@ -25,8 +25,8 @@ import java.io.File
 import java.io.IOException
 import javax.swing.event.HyperlinkEvent
 import javax.swing.event.HyperlinkListener
-
-
+import okhttp3.OkHttpClient
+import okhttp3.Request
 class PluginStartup: StartupActivity {
 
     override fun runActivity(project: Project) {
@@ -88,10 +88,35 @@ fun showInstallDW(project: Project){
 }
 
 fun installDW(){
-    DashwaveWindow.displayOutput("Installing dw-cli ...", ConsoleViewContentType.NORMAL_OUTPUT)
-    TODO(
-        "not implemented yet"
-    )
+    DashwaveWindow.displayOutput("Setting up Dashwave plugin...", ConsoleViewContentType.NORMAL_OUTPUT)
+
+    val client = OkHttpClient()
+    val request = Request.Builder()
+            .url("https://cli.dashwave.io")
+            .build()
+
+    client.newCall(request).execute().use { response: okhttp3.Response ->
+        if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+        // Create a temporary file to store the script
+        val tempScript = File.createTempFile("script", ".sh")
+
+        // Write the response to the temp file
+        response.body?.let { responseBody: okhttp3.ResponseBody ->
+            tempScript.writeText(responseBody.string())
+            // Make the script executable
+            tempScript.setExecutable(true)
+
+            // Execute the script
+            val process = ProcessBuilder(tempScript.absolutePath).start()
+            val exitCode = process.waitFor()
+            if (exitCode == 0) {
+                DashwaveWindow.displayOutput("Dashwave plugin setup has successfully completed! \n\n", ConsoleViewContentType.NORMAL_OUTPUT)
+            } else {
+                TODO("give actionable to user for trigger the manual cli installation")
+            }
+        } ?: throw IOException("Response body is null")
+    }
 }
 fun verifyLogin(pwd:String){
     val currentUserLoginCmd = "dw user"
