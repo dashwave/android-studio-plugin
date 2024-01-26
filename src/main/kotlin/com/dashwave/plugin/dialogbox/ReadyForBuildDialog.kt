@@ -1,4 +1,4 @@
-package com.dashwave.plugin
+package com.dashwave.plugin.dialogbox
 
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.IconLoader
@@ -7,10 +7,10 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.Action
 
-class MyCustomDialog : DialogWrapper(true) {
+class ReadyForBuildDialog : DialogWrapper(true) {
     init {
         init()
-        title = "DW Build"
+        title = "Project Created Successfully"
     }
 
     override fun createCenterPanel(): JComponent? {
@@ -21,14 +21,13 @@ class MyCustomDialog : DialogWrapper(true) {
         val iconLabel = JLabel(icon)
 
         // Add components to the panel
+        dialogPanel.add(JLabel("Click on"))
         dialogPanel.add(iconLabel)
-        dialogPanel.add(JLabel("Click the 'dw build' icon in the toolbar to start a cloud build."))
-
+        dialogPanel.add(JLabel("run build on dashwave button in the toolbar to start your build"))
         return dialogPanel
     }
 
     override fun createActions(): Array<Action> {
-        // Create a custom "OK" button
         val okButton = okAction
         return arrayOf(okButton)
     }

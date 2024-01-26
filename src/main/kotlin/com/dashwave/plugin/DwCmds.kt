@@ -1,1 +1,0 @@
-package com.dashwave.plugin
