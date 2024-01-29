@@ -44,6 +44,8 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
 
     fun executeBuild(pwd:String?, openEmulator:Boolean){
         this.p.start()
+        DashwaveWindow.disableRunButton()
+        DashwaveWindow.enableCancelButton()
         DashwaveWindow.currentBuild = this
         BalloonNotif(
             "Build started",
