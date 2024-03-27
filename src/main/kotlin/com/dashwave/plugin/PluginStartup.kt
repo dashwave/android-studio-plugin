@@ -68,23 +68,23 @@ fun checkDW(pwd: String, project: Project){
 }
 
 fun showInstallDW(project: Project){
-    val notificationGroup = NotificationGroup.balloonGroup("YourPluginNotificationGroup")
+//    val notificationGroup = NotificationGroup.balloonGroup("YourPluginNotificationGroup")
 
-    val notification = notificationGroup.createNotification(
-        "Install dw-cli",
-        "Please click below to install dw-cli",
-        NotificationType.INFORMATION,
-        null
-    )
+//    val notification = notificationGroup.createNotification(
+//        "Install dw-cli",
+//        "Please click below to install dw-cli",
+//        NotificationType.INFORMATION,
+//        null
+//    )
+//
+//    notification.addAction(object : NotificationAction("Install dw-cli") {
+//        override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+//            installDW()
+//            notification.expire() // Close the notification after the action is performed
+//        }
+//    })
 
-    notification.addAction(object : NotificationAction("Install dw-cli") {
-        override fun actionPerformed(e: AnActionEvent, notification: Notification) {
-            installDW()
-            notification.expire() // Close the notification after the action is performed
-        }
-    })
-
-    notification.notify(project)
+//    notification.notify(project)
 }
 
 fun installDW(){
@@ -142,11 +142,16 @@ fun verifyLogin(pwd:String){
 }
 
 fun loginUser(pwd:String) {
-    val loginUserCmd = "dw login local"
+    val loginDialog = LoginDialog()
+    var accessCode: String = ""
+    if (loginDialog.showAndGet()) {
+        accessCode = loginDialog.getAccessCode()
+    }
+    val loginUserCmd = "dw login -e local $accessCode"
+
     val processBuilder = Process(loginUserCmd)
     val process = processBuilder.start(true)
     val exitCode = process.waitFor()
-
     if (exitCode == 0) {
         print("user logged in successfully")
 
