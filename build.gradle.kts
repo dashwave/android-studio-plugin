@@ -1,14 +1,18 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
-    id("org.jetbrains.intellij") version "1.13.3"
+    id("org.jetbrains.intellij") version "1.17.0"
 }
 
 group = "com.dashwave"
-version = "1.0"
+version = "2.0.1"
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
 
 // Configure Gradle IntelliJ Plugin
