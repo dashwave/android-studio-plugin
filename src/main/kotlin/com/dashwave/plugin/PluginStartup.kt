@@ -31,7 +31,6 @@ class PluginStartup: StartupActivity {
 fun checkDW(project: Project) {
     val dwCmd = DwCmds("check-update", "", true)
     val exitCode = dwCmd.executeWithExitCode()
-    DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
     if (exitCode == 0) {
         DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
         verifyLogin(project?.basePath)
