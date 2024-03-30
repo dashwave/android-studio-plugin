@@ -29,7 +29,7 @@ class PluginStartup: StartupActivity {
 }
 
 fun checkDW(project: Project) {
-    val dwCmd = DwCmds("check-update -e dev", "", true)
+    val dwCmd = DwCmds("check-update", "", true)
     val exitCode = dwCmd.executeWithExitCode()
     DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
     if (exitCode == 0) {
@@ -109,7 +109,7 @@ fun loginUser(pwd:String?) {
     if (loginDialog.showAndGet()) {
         accessCode = loginDialog.getAccessCode()
     }
-    val loginUserCmd = "login -e local $accessCode"
+    val loginUserCmd = "login $accessCode"
     val exitCode = DwCmds(loginUserCmd, "", true).executeWithExitCode()
     if (exitCode == 0) {
         checkProjectConnected(pwd)
