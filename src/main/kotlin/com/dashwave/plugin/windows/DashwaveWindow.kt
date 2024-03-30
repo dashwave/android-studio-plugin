@@ -22,10 +22,15 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.AnimatedIcon
+import com.intellij.ui.components.JBList
+import com.jetbrains.rd.util.first
+import java.awt.Dimension
 import java.awt.event.ItemEvent
 import java.awt.event.ItemListener
 import javax.swing.Icon
+import javax.swing.JComboBox
 import javax.swing.JLabel
+import javax.swing.JList
 
 class DashwaveWindow : ToolWindowFactory {
     companion object {
@@ -41,6 +46,8 @@ class DashwaveWindow : ToolWindowFactory {
         private  var cleanBuildCheckbox:JCheckBox = JCheckBox("Clean Build")
         private  var debugEnabledCheckBox: JCheckBox = JCheckBox("Enable Debug")
         private  var openEmulatorCheckbox:JCheckBox = JCheckBox("Open Emulator")
+        private var modulesList: JComboBox<String> = JComboBox<String>()
+        private var variantsList: JComboBox<String> = JComboBox<String>()
 
         fun show(){
             val toolWindowManager = ToolWindowManager.getInstance(p)
@@ -62,8 +69,10 @@ class DashwaveWindow : ToolWindowFactory {
             val cleanBuild = cleanBuildCheckbox.isSelected
             val debugEnabled = debugEnabledCheckBox.isSelected
             val openEmulator = openEmulatorCheckbox.isSelected
+            val module: String = modulesList.selectedItem?.toString() ?: "app"
+            val variant: String = variantsList.selectedItem?.toString() ?: "Debug"
             DashwaveWindow.displayInfo("open emulator is $openEmulator")
-            return DwBuildConfig(cleanBuild, debugEnabled, openEmulator,p.basePath)
+            return DwBuildConfig(cleanBuild, debugEnabled, openEmulator, module, variant, p.basePath)
         }
 
         fun displayOutput(s:String, type:ConsoleViewContentType){
@@ -100,9 +109,36 @@ class DashwaveWindow : ToolWindowFactory {
         fun enableCancelButton(){
             cancelButton.isEnabled = true
         }
+
+        fun addModulesAndVariants(modulesVariants: Map<String, List<String>>, defaultModule: String, defaultVariant: String){
+            modulesList.removeAllItems()
+            variantsList.removeAllItems()
+
+            modulesList.addItem(defaultModule)
+            variantsList.addItem(defaultVariant)
+
+            modulesVariants.keys.toTypedArray().forEach { module ->
+                modulesList.addItem(module)
+            }
+
+            modulesList.addItemListener(ItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    val selectedModule = modulesList.selectedItem as String
+
+                    variantsList.removeAllItems()
+                    modulesVariants[selectedModule]?.forEach { variant ->
+                        variantsList.addItem(variant)
+                    }
+                }
+            })
+
+            variantsList.addItemListener(ItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    val selectedVariant = variantsList.selectedItem as String
+                }
+            })
+        }
     }
-
-
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         println("\n\ncretate tool window content is called")
@@ -137,6 +173,29 @@ class DashwaveWindow : ToolWindowFactory {
         optionToolbar.add(cleanBuildCheckbox)
         optionToolbar.add(debugEnabledCheckBox)
         optionToolbar.add(openEmulatorCheckbox)
+
+        modulesList.addItemListener(ItemListener {
+            if (it.stateChange == ItemEvent.SELECTED) {
+                val selectedModule = modulesList.selectedItem as String
+//                displayInfo("Selected module is $selectedModule")
+            }
+        })
+        variantsList.addItemListener(ItemListener {
+            if (it.stateChange == ItemEvent.SELECTED) {
+                val selectedVariant = variantsList.selectedItem as String
+//                displayInfo("Selected variant is $selectedVariant")
+            }
+        })
+
+        modulesList.preferredSize = Dimension(100, modulesList.preferredSize.height)
+        variantsList.preferredSize = Dimension(100, variantsList.preferredSize.height)
+
+        // add non-item label to modules and variants
+        optionToolbar.add(JLabel("Modules"))
+        optionToolbar.add(modulesList)
+
+        optionToolbar.add(JLabel("Variants"))
+        optionToolbar.add(variantsList)
         openEmulatorCheckbox.isSelected = true
 
         panel.add(actionToolbar, BorderLayout.NORTH)

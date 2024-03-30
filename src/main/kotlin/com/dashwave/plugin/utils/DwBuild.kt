@@ -7,11 +7,13 @@ import com.intellij.openapi.project.Project
 import okhttp3.internal.wait
 import kotlin.concurrent.thread
 
-class DwBuildConfig(clean:Boolean,debug:Boolean,openEmulator:Boolean, pwd:String?){
+class DwBuildConfig(clean:Boolean,debug:Boolean,openEmulator:Boolean,module:String,variant:String, pwd:String?){
     var clean:Boolean = clean
     var debug:Boolean = debug
     var openEmulator:Boolean = openEmulator
     var pwd:String? = pwd
+    var module:String = module
+    var variant:String = variant
 }
 
 class DwBuild(config: DwBuildConfig){
@@ -25,6 +27,15 @@ class DwBuild(config: DwBuildConfig){
         if(config.debug){
             cmd += " --debug"
         }
+
+        if (config.module != ""){
+            cmd += " --module ${config.module}"
+        }
+
+        if (config.variant != ""){
+            cmd += " --variant ${config.variant}"
+        }
+
         pwd = config.pwd
         openEmulator = config.openEmulator
     }
@@ -36,7 +47,7 @@ class DwBuild(config: DwBuildConfig){
     private fun execute(){
 //        DashwaveWindow.displayInfo()
         val buildCmd = DwCmds(cmd, pwd, true)
-        buildCmd.executeBuild(pwd, openEmulator)
+//        buildCmd.executeBuild(pwd, openEmulator)
     }
 
     fun killEmulator(){

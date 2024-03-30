@@ -8,6 +8,7 @@ import com.intellij.openapi.util.Key
 import okhttp3.internal.wait
 import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -16,6 +17,7 @@ import kotlin.concurrent.thread
 class Process(cmd:String, pwd:String?, log:Boolean){
     private var ph:ProcessHandler
     private val latch = CountDownLatch(1)
+    private val outputBuilder = StringBuilder()
     init {
         val cmd = GeneralCommandLine("/bin/bash","-c",cmd)
         if(pwd != null && pwd != ""){
@@ -27,6 +29,7 @@ class Process(cmd:String, pwd:String?, log:Boolean){
         ph = OSProcessHandler(cmd)
         ph.addProcessListener(object:ProcessAdapter(){
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                outputBuilder.append(event.text)
                 if(log) {
                     decodeAndPrintString(event.text, outputType)
                 }
@@ -49,6 +52,10 @@ class Process(cmd:String, pwd:String?, log:Boolean){
 
     fun exit(){
         ph.destroyProcess()
+    }
+
+    fun getOutput(): String {
+        return outputBuilder.toString()
     }
 }
 private fun decodeAndPrintString(s:String, p: Key<*>){

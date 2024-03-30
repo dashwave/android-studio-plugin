@@ -29,8 +29,9 @@ class PluginStartup: StartupActivity {
 }
 
 fun checkDW(project: Project) {
-    val dwCmd = DwCmds("check-update", "", true)
+    val dwCmd = DwCmds("check-update -e dev", "", true)
     val exitCode = dwCmd.executeWithExitCode()
+    DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
     if (exitCode == 0) {
         DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
         verifyLogin(project?.basePath)
@@ -92,6 +93,7 @@ fun verifyLogin(pwd:String?){
 fun checkProjectConnected(pwd:String?){
     if (doesFileExist("$pwd/dashwave.yml")){
         DashwaveWindow.enableRunButton()
+        listModulesAndVariants(pwd)
         DashwaveWindow.displayOutput("✅ Project is successfully connected to dashwave. Run a cloud build using dashwave icon on toolbar\n\n", ConsoleViewContentType.NORMAL_OUTPUT)
         val dd = ReadyForBuildDialog()
         dd.show()
@@ -102,7 +104,12 @@ fun checkProjectConnected(pwd:String?){
 }
 
 fun loginUser(pwd:String?) {
-    val loginUserCmd = "login"
+    val loginDialog = LoginDialog()
+    var accessCode: String = ""
+    if (loginDialog.showAndGet()) {
+        accessCode = loginDialog.getAccessCode()
+    }
+    val loginUserCmd = "login -e local $accessCode"
     val exitCode = DwCmds(loginUserCmd, "", true).executeWithExitCode()
     if (exitCode == 0) {
         checkProjectConnected(pwd)
@@ -117,6 +124,54 @@ fun loginUser(pwd:String?) {
 fun doesFileExist(path: String): Boolean {
     val file = File(path)
     return file.exists()
+}
+
+fun listModulesAndVariants(pwd:String?) {
+    val configsCmd = DwCmds("build configs", pwd, true)
+    var output = configsCmd.executeWithOutput()
+    val ansiEscapeRegex = "\\x1B\\[[;\\d]*m".toRegex()
+    output = output.replace(ansiEscapeRegex, "")
+
+    val map = mutableMapOf<String, List<String>>()
+    var defaultModule: String = ""
+    var defaultVariant: String = ""
+    var foundDefault = false
+
+    // Split the input string by lines
+    val lines = output.split("\n")
+
+    for (line in lines) {
+        // Split each line by ':'
+        val parts = line.split(":").map { it.trim() } // Trim to remove leading/trailing whitespace
+
+        if (parts.size == 2) {
+            // The first part is the project name, and the second part contains the build types
+            val projectName = parts[0]
+            val buildTypes = parts[1].trim('[', ']').split(" ").filter { it.isNotEmpty() }
+
+            // Populate the map
+            if (projectName == "default") {
+                if (buildTypes.size >= 2) {
+                    defaultModule = buildTypes[0]
+                    defaultVariant = buildTypes[1]
+                    foundDefault = true
+                } else {
+                    println("Warning: 'default' project does not contain enough build types.")
+                }
+            } else {
+                map[projectName] = buildTypes
+            }
+        }
+    }
+
+    if (!foundDefault && map.isNotEmpty()) {
+        map.entries.first().let { firstEntry ->
+            defaultModule = firstEntry.key
+            defaultVariant = firstEntry.value.firstOrNull() ?: ""
+        }
+    }
+
+    DashwaveWindow.addModulesAndVariants(map, defaultModule, defaultVariant)
 }
 
 fun openCreateProjectDialog(pwd:String?, openTip:Boolean):Boolean{
@@ -144,6 +199,7 @@ fun createProject(projectName: String, devStack:String, rootDir:String,pwd:Strin
     val exitCode = DwCmds(createProjectCmd, pwd, true).executeWithExitCode()
     if(exitCode == 0){
         DashwaveWindow.enableRunButton()
+        listModulesAndVariants(pwd)
         Notifications.Bus.notify(
             Notification(
                 "YourPluginNotificationGroup",

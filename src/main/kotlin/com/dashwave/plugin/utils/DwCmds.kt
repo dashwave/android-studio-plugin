@@ -10,6 +10,8 @@ import com.intellij.openapi.keymap.impl.ui.Hyperlink
 import com.intellij.openapi.project.Project
 import com.intellij.util.Futures.thenRunAsync
 import okhttp3.internal.wait
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
@@ -36,6 +38,22 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
         }
         return exitCode
     }
+
+    fun executeWithOutput():String{
+        this.p.start()
+        val exitCode = this.p.wait()
+        if(exitCode == 11){
+            DashwaveWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
+            val hyperlink = HyperlinkInfo { p: Project ->
+                installDW(this.pwd)
+            }
+            DashwaveWindow.console.printHyperlink("Click here to update\n\n", hyperlink)
+        }
+
+        // get the stdout as string
+        return this.p.getOutput()
+    }
+
 
     fun exit(){
         this.p.exit()
