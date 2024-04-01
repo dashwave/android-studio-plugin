@@ -29,7 +29,22 @@ class PluginStartup: StartupActivity {
 }
 
 fun checkDW(project: Project) {
-    val dwCmd = DwCmds("check-update", "", true)
+    // check if an environment is set by the name CLI_ENV
+    val env = System.getenv("CLI_ENV")
+
+    var updateBaseCmd = "check-update"
+
+    if (env != null) {
+        if (env == "local") {
+            updateBaseCmd = "check-update -e local"
+        } else if (env == "dev") {
+            updateBaseCmd = "check-update -e dev"
+        } else if (env == "staging") {
+            updateBaseCmd = "check-update -e staging"
+        }
+    }
+
+    val dwCmd = DwCmds(updateBaseCmd, "", true)
     val exitCode = dwCmd.executeWithExitCode()
     if (exitCode == 0) {
         DashwaveWindow.displayInfo(Messages.DW_INSTALLED_ALREADY)
@@ -102,7 +117,21 @@ fun checkProjectConnected(pwd:String?){
 }
 
 fun loginUser(pwd:String?) {
-    val loginUserCmd = "login"
+    // check if an environment is set by the name CLI_ENV
+    val env = System.getenv("CLI_ENV")
+
+    var loginUserCmd = "login"
+
+    if (env != null) {
+        if (env == "local") {
+            loginUserCmd = "login -e local"
+        } else if (env == "dev") {
+            loginUserCmd = "login -e dev"
+        } else if (env == "staging") {
+            loginUserCmd = "login -e staging"
+        }
+    }
+
     val exitCode = DwCmds(loginUserCmd, "", true).executeWithExitCode()
     if (exitCode == 0) {
         checkProjectConnected(pwd)
