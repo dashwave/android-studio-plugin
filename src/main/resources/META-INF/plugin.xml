@@ -64,11 +64,11 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Dashwave"
-                    icon="icons/dashwave13.svg"
-                    factoryClass="com.dashwave.plugin.windows.DashwaveWindow"
-                    order="first"
-        />
+<!--        <toolWindow id="Dashwave"-->
+<!--                    icon="icons/dashwave13.svg"-->
+<!--                    factoryClass="com.dashwave.plugin.windows.DashwaveWindow"-->
+<!--                    order="first"-->
+<!--        />-->
         <postStartupActivity implementation="com.dashwave.plugin.PluginStartup" order="last"/>
         <notificationGroup id="YourPluginNotificationGroup" displayType="BALLOON" toolWindowId=""/>
     </extensions>

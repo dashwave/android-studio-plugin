@@ -16,10 +16,11 @@ class DwBuildConfig(clean:Boolean,debug:Boolean,openEmulator:Boolean,module:Stri
     var variant:String = variant
 }
 
-class DwBuild(config: DwBuildConfig){
+class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
     private var cmd:String = "plugin-build"
     private val openEmulator:Boolean
     private var pwd:String?
+    private var dwWindow:DashwaveWindow
     init {
         if(config.clean){
             cmd += " --clean"
@@ -38,15 +39,16 @@ class DwBuild(config: DwBuildConfig){
 
         pwd = config.pwd
         openEmulator = config.openEmulator
+        this.dwWindow = dwWindow
     }
 
     private fun activateDashwaveWindow(){
-        DashwaveWindow.show()
+//        this.dwWindow.show()
     }
 
     private fun execute(){
 //        DashwaveWindow.displayInfo()
-        val buildCmd = DwCmds(cmd, pwd, true)
+        val buildCmd = DwCmds(cmd, pwd, true, this.dwWindow)
         buildCmd.executeBuild(pwd, openEmulator)
     }
 
@@ -56,18 +58,17 @@ class DwBuild(config: DwBuildConfig){
 
     fun run(p:Project){
         activateDashwaveWindow()
-        DashwaveWindow.clearConsole()
-        DashwaveWindow.disableRunButton()
-        DashwaveWindow.enableCancelButton()
-        if(DashwaveWindow.lastEmulatorProcess != null){
-            DashwaveWindow.lastEmulatorProcess!!.exit()
+        this.dwWindow.clearConsole()
+        this.dwWindow.disableRunButton()
+        this.dwWindow.enableCancelButton()
+        if(this.dwWindow.lastEmulatorProcess != null){
+            this.dwWindow.lastEmulatorProcess!!.exit()
         }
         if (!doesFileExist("${pwd}/dashwave.yml")){
-            if(!openCreateProjectDialog(pwd, false)){
-                DashwaveWindow.enableRunButton()
-                DashwaveWindow.disableCancelButton()
-                return
+            openCreateProjectDialog(pwd, false, this.dwWindow){
+                execute()
             }
+            return
         }
         execute()
     }
