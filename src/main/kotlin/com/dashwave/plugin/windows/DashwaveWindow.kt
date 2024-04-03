@@ -1,5 +1,6 @@
 package com.dashwave.plugin.windows
 
+import com.dashwave.plugin.actions.BuildAction
 import com.dashwave.plugin.utils.DwBuild
 import com.dashwave.plugin.utils.DwBuildConfig
 import com.dashwave.plugin.utils.DwCmds
@@ -27,93 +28,100 @@ import java.awt.event.ItemListener
 import javax.swing.Icon
 import javax.swing.JLabel
 
-class DashwaveWindow : ToolWindowFactory {
-    companion object {
-        var lastEmulatorProcess:DwCmds? = null
-        var currentBuild:DwCmds? = null
-        lateinit var console: ConsoleView
-        lateinit var runButton: JButton
-        lateinit var cancelButton: JButton
-        lateinit var p: Project
-        var dwIcon: Icon = IconLoader.getIcon("/icons/dashwave13.svg")
-        var loadIcon: Icon = AnimatedIcon.Default()
-        var runEnabled = false
-        private  var cleanBuildCheckbox:JCheckBox = JCheckBox("Clean Build")
-        private  var debugEnabledCheckBox: JCheckBox = JCheckBox("Enable Debug")
-        private  var openEmulatorCheckbox:JCheckBox = JCheckBox("Open Emulator")
+class DashwaveWindow(project: Project){
+    var lastEmulatorProcess:DwCmds? = null
+    var currentBuild:DwCmds? = null
+    lateinit var console: ConsoleView
+    lateinit var runButton: JButton
+    lateinit var cancelButton: JButton
+    lateinit var p: Project
+    var dwIcon: Icon = IconLoader.getIcon("/icons/dashwave13.svg")
+    var loadIcon: Icon = AnimatedIcon.Default()
+    var runEnabled = false
+    private  var cleanBuildCheckbox:JCheckBox = JCheckBox("Clean Build")
+    private  var debugEnabledCheckBox: JCheckBox = JCheckBox("Enable Debug")
+    private  var openEmulatorCheckbox:JCheckBox = JCheckBox("Open Emulator")
+    var window:ToolWindow? = null
 
-        fun show(){
-            val toolWindowManager = ToolWindowManager.getInstance(p)
-            val myWindow = toolWindowManager.getToolWindow("Dashwave")
-            myWindow?.show()
-        }
-
-        fun changeIcon(icon:Icon){
-            val toolWindowManager = ToolWindowManager.getInstance(p)
-            val myWindow = toolWindowManager.getToolWindow("Dashwave")
-            myWindow?.setIcon(icon)
-        }
-
-        fun clearConsole(){
-            console.clear()
-        }
-
-        fun getBuildConfigs(p:Project):DwBuildConfig{
-            val cleanBuild = cleanBuildCheckbox.isSelected
-            val debugEnabled = debugEnabledCheckBox.isSelected
-            val openEmulator = openEmulatorCheckbox.isSelected
-            DashwaveWindow.displayInfo("open emulator is $openEmulator")
-            return DwBuildConfig(cleanBuild, debugEnabled, openEmulator,p.basePath)
-        }
-
-        fun displayOutput(s:String, type:ConsoleViewContentType){
-            console.print(s, type)
-        }
-
-        fun displayInfo(s:String){
-            console.print(s, ConsoleViewContentType.NORMAL_OUTPUT)
-        }
-
-        fun displayError(s:String){
-            console.print(s, ConsoleViewContentType.ERROR_OUTPUT)
-        }
-
-        fun disableRunButton(){
-            runEnabled = false
-            runButton.isEnabled = false
-            cleanBuildCheckbox.isEnabled = false
-            debugEnabledCheckBox.isEnabled = false
-            openEmulatorCheckbox.isEnabled = false
-        }
-
-        fun enableRunButton(){
-            runEnabled = true
-            runButton.isEnabled = true
-            cleanBuildCheckbox.isEnabled = true
-            debugEnabledCheckBox.isEnabled = true
-            openEmulatorCheckbox.isEnabled = true
-        }
-
-        fun disableCancelButton(){
-            cancelButton.isEnabled = false
-        }
-        fun enableCancelButton(){
-            cancelButton.isEnabled = true
-        }
+    init {
+        p = project
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.registerToolWindow(
+            "Dashwave",  // ID of the tool window
+            false,            // canCloseContent - whether the tool window can be closed
+            ToolWindowAnchor.BOTTOM  // The anchor location
+        )
+        window = toolWindow
+        toolWindow.setIcon(IconLoader.getIcon("/icons/dashwave13.svg"))
+        createToolWindowContent()
     }
 
 
+    fun show(){
+        window?.show()
+    }
+    fun changeIcon(icon:Icon){
+        window?.setIcon(icon)
+    }
 
-    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        println("\n\ncretate tool window content is called")
-        console = TextConsoleBuilderFactory.getInstance().createBuilder(project).console
+    fun clearConsole(){
+        console.clear()
+    }
+
+    fun getBuildConfigs():DwBuildConfig{
+        val cleanBuild = cleanBuildCheckbox.isSelected
+        val debugEnabled = debugEnabledCheckBox.isSelected
+        val openEmulator = openEmulatorCheckbox.isSelected
+        return DwBuildConfig(cleanBuild, debugEnabled, openEmulator,p.basePath)
+    }
+
+    fun displayOutput(s:String, type:ConsoleViewContentType){
+        console.print(s, type)
+    }
+
+    fun displayInfo(s:String){
+        console.print(s, ConsoleViewContentType.NORMAL_OUTPUT)
+    }
+
+    fun displayError(s:String){
+        console.print(s, ConsoleViewContentType.ERROR_OUTPUT)
+    }
+
+    fun disableRunButton(){
+        runEnabled = false
+        runButton.isEnabled = false
+        cleanBuildCheckbox.isEnabled = false
+        debugEnabledCheckBox.isEnabled = false
+        openEmulatorCheckbox.isEnabled = false
+    }
+
+    fun enableRunButton(){
+        runEnabled = true
+        runButton.isEnabled = true
+        cleanBuildCheckbox.isEnabled = true
+        debugEnabledCheckBox.isEnabled = true
+        openEmulatorCheckbox.isEnabled = true
+    }
+
+    fun disableCancelButton(){
+        cancelButton.isEnabled = false
+    }
+    fun enableCancelButton(){
+        cancelButton.isEnabled = true
+    }
+
+
+    private fun createToolWindowContent() {
+        println("\n\ncretate tool window content is called\n\n")
+        console = TextConsoleBuilderFactory.getInstance().createBuilder(p).console
+        val contentFactory = ContentFactory.getInstance()
         val panel = JPanel(BorderLayout())
         // Set up the toolbar with a button
         val actionToolbar = JToolBar(JToolBar.HORIZONTAL)
         runButton = JButton(AllIcons.Actions.RunAll)
         runButton.addActionListener {
-            val configs = getBuildConfigs(p)
-            val build = DwBuild(configs)
+            val configs = getBuildConfigs()
+            val build = DwBuild(configs, this)
             build.run(p)
         }
 
@@ -121,7 +129,7 @@ class DashwaveWindow : ToolWindowFactory {
         cancelButton.addActionListener{
             disableCancelButton()
             currentBuild?.exit()
-            val stopBuild = DwCmds("stop-build", p.basePath, true)
+            val stopBuild = DwCmds("stop-build", p.basePath, true, this)
             stopBuild.executeWithExitCode()
             enableRunButton()
         }
@@ -146,10 +154,9 @@ class DashwaveWindow : ToolWindowFactory {
 
         panel.add(console.component, BorderLayout.CENTER)
 
-        val contentFactory = ContentFactory.getInstance()
         val content = contentFactory.createContent(panel, "", false)
-        toolWindow.setAnchor(ToolWindowAnchor.BOTTOM, null)
-        toolWindow.contentManager.addContent(content)
+        window?.setAnchor(ToolWindowAnchor.BOTTOM, null)
+        window?.contentManager?.addContent(content)
     }
 
 }

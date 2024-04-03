@@ -1,6 +1,7 @@
 package com.dashwave.plugin.utils
 
 import com.dashwave.plugin.installDW
+import com.dashwave.plugin.loginUser
 import com.dashwave.plugin.notif.BalloonNotif
 import com.dashwave.plugin.windows.DashwaveWindow
 import com.intellij.execution.filters.HyperlinkInfo
@@ -14,25 +15,27 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
-class DwCmds(execCmd:String, wd:String?, log: Boolean){
+class DwCmds(execCmd:String, wd:String?, log: Boolean, dwWindow: DashwaveWindow){
     private var cmd:String
     private var p:Process
     private var pwd:String?
+    private var dwWindow:DashwaveWindow
     init {
         cmd = "dw $execCmd --plugin"
         pwd = wd
-        p = com.dashwave.plugin.utils.Process(cmd, pwd, log)
+        p = com.dashwave.plugin.utils.Process(cmd, pwd, log, dwWindow)
+        this.dwWindow = dwWindow
     }
 
     fun executeWithExitCode():Int{
         this.p.start()
         val exitCode = this.p.wait()
         if(exitCode == 11){
-            DashwaveWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
+            this.dwWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
             val hyperlink = HyperlinkInfo { p: Project ->
-                installDW(this.pwd)
+                installDW(this.pwd, this.dwWindow)
             }
-            DashwaveWindow.console.printHyperlink("Click here to update\n\n", hyperlink)
+            this.dwWindow.console.printHyperlink("Click here to update\n\n", hyperlink)
         }
         return exitCode
     }
@@ -44,22 +47,22 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
 
     fun executeBuild(pwd:String?, openEmulator:Boolean){
         this.p.start()
-        DashwaveWindow.disableRunButton()
-        DashwaveWindow.enableCancelButton()
-        DashwaveWindow.currentBuild = this
+        this.dwWindow.disableRunButton()
+        this.dwWindow.enableCancelButton()
+        this.dwWindow.currentBuild = this
         BalloonNotif(
             "Build started",
             "",
             "Build started on dashwave. Your build is running on a remote machine. You can view the logs in console and view emulation after build completes",
             NotificationType.INFORMATION
-        ){}.show()
-        DashwaveWindow.changeIcon(DashwaveWindow.loadIcon)
+        ){}.show(dwWindow.p)
+        this.dwWindow.changeIcon(this.dwWindow.loadIcon)
         Thread{
             var ex = this.p.wait()
-            DashwaveWindow.currentBuild = null
-            DashwaveWindow.changeIcon(DashwaveWindow.dwIcon)
-            DashwaveWindow.enableRunButton()
-            DashwaveWindow.disableCancelButton()
+            this.dwWindow.currentBuild = null
+            this.dwWindow.changeIcon(this.dwWindow.dwIcon)
+            this.dwWindow.enableRunButton()
+            this.dwWindow.disableCancelButton()
 //            DashwaveWindow.show()
             when(ex){
                 0 -> {
@@ -70,20 +73,20 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
                         NotificationType.INFORMATION
                     ){
 //                        BrowserUtil.browse("https://console.dashwave.io/home?profile=true")
-                    }.show()
+                    }.show(dwWindow.p)
 
                     if(openEmulator){
-                        val emulatorCmd = DwCmds("emulator", pwd, false)
-                        DashwaveWindow.lastEmulatorProcess = emulatorCmd
+                        val emulatorCmd = DwCmds("emulator", pwd, false, this.dwWindow)
+                        this.dwWindow.lastEmulatorProcess = emulatorCmd
                         val ex = emulatorCmd.executeWithExitCode()
                     }
                 }
                 11 -> {
-                    DashwaveWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
+                    this.dwWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
                     val hyperlink = HyperlinkInfo { p: Project ->
-                        installDW(pwd)
+                        installDW(pwd, this.dwWindow)
                     }
-                    DashwaveWindow.console.printHyperlink("Click here to update\n\n", hyperlink)
+                    this.dwWindow.console.printHyperlink("Click here to update\n\n", hyperlink)
                 }
                 // exitcode = 12 means authorize scm failed
                 12 -> {
@@ -93,8 +96,24 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
                         "We could not fetch your project from github/gitlab. Please authorize to provide access",
                         NotificationType.ERROR
                     ){
-                        BrowserUtil.browse("https://console.dashwave.io/home?profile=true")
-                    }.show()
+                        BrowserUtil.browse("https://consoledev.dashwave.io/home?profile=true")
+                    }.show(dwWindow.p)
+                }
+                13 -> {
+                    BalloonNotif(
+                        "Not Authorized",
+                        "Login here",
+                        "Your auth token may have expired. Click here to login again",
+                        NotificationType.ERROR
+                    ){
+                        loginUser(pwd, dwWindow)
+                    }.show(dwWindow.p)
+
+                    this.dwWindow.displayError("Your auth token seems to have expired. Click below to login again\n")
+                    val hyperlink = HyperlinkInfo { p: Project ->
+                        loginUser(pwd, this.dwWindow)
+                    }
+                    this.dwWindow.console.printHyperlink("Login here\n\n", hyperlink)
                 }
                 else -> {
                     // add try again
@@ -103,7 +122,7 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
                         "",
                         "Your build failed. Please check for logs in the console",
                         NotificationType.ERROR
-                    ){}.show()
+                    ){}.show(dwWindow.p)
                 }
             }
         }.start()

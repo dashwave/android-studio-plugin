@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-class Process(cmd:String, pwd:String?, log:Boolean){
+class Process(cmd:String, pwd:String?, log:Boolean, dwWindow: DashwaveWindow){
     private var ph:ProcessHandler
     private val latch = CountDownLatch(1)
     init {
@@ -28,7 +28,7 @@ class Process(cmd:String, pwd:String?, log:Boolean){
         ph.addProcessListener(object:ProcessAdapter(){
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                 if(log) {
-                    decodeAndPrintString(event.text, outputType)
+                    decodeAndPrintString(event.text, outputType, dwWindow)
                 }
             }
             override fun processTerminated(event: ProcessEvent) {
@@ -51,10 +51,10 @@ class Process(cmd:String, pwd:String?, log:Boolean){
         ph.destroyProcess()
     }
 }
-private fun decodeAndPrintString(s:String, p: Key<*>){
+private fun decodeAndPrintString(s:String, p: Key<*>, dwWindow: DashwaveWindow){
     val decoder = AnsiEscapeDecoder()
     val outputListener = AnsiEscapeDecoder.ColoredTextAcceptor { text, attributes ->
-        DashwaveWindow.displayOutput(text, ConsoleViewContentType.getConsoleViewType(attributes))
+        dwWindow.displayOutput(text, ConsoleViewContentType.getConsoleViewType(attributes))
     }
     decoder.escapeText(s, p, outputListener)
 }
