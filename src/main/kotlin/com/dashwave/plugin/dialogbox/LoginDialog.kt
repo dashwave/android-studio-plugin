@@ -14,7 +14,8 @@ class LoginDialog : DialogWrapper(true) {
 
 
     init {
-        title = "Log in to Dashwave Cloud"
+        // TODO: add logo to title
+        title = "Authenticate with Dashwave Cloud"
         init()
     }
 
@@ -29,15 +30,23 @@ class LoginDialog : DialogWrapper(true) {
         gbc.gridwidth = 2
 
         val icon = IconLoader.getIcon("/icons/dashwave13.svg") // Make sure to provide the correct path
-        val labelWithIcon = JLabel("Login to Dashwave Cloud by entering your access code", icon, SwingConstants.LEFT)
-        panel.add(labelWithIcon, gbc)
+        this.createTitlePane()
 
-        val linkHeadLabel = JLabel("Visit this link to view your access code on Dashwave's console:")
+        val labelWithIcon = JLabel("Login to Dashwave Cloud by entering your access code", icon, SwingConstants.LEFT)
+//        panel.add(labelWithIcon, gbc)
+
+        val linkHeadLabel = JLabel("Authenticate the plugin with Dashwave cloud using your personal access code")
+        // TODO: add - to view your access code, visit this link: <link>
         gbc.gridy+=20
         gbc.gridx = 0
         gbc.gridwidth = 2
         linkHeadLabel.preferredSize = Dimension(600, linkHeadLabel.preferredSize.height+10)
         panel.add(linkHeadLabel, gbc)
+
+        val label = JLabel("To view your access code, visit this link:")
+        gbc.gridy+=20
+        gbc.gridwidth = 2
+        panel.add(label, gbc)
 
         val linkLabel = JLabel("<html><a href=''>https://console.dashwave.io/home?profile=true</a></html>")
         linkLabel.cursor = Cursor(Cursor.HAND_CURSOR) // Change the cursor to a hand cursor
@@ -76,7 +85,7 @@ class LoginDialog : DialogWrapper(true) {
 //        }
 
         // change the ok button to login
-        setOKButtonText("Login")
+        setOKButtonText("Authenticate")
 
         return panel
     }
