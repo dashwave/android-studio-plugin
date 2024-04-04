@@ -1,6 +1,7 @@
 package com.dashwave.plugin.utils
 
 import com.dashwave.plugin.installDW
+import com.dashwave.plugin.listModulesAndVariants
 import com.dashwave.plugin.notif.BalloonNotif
 import com.dashwave.plugin.windows.DashwaveWindow
 import com.intellij.execution.filters.HyperlinkInfo
@@ -20,14 +21,16 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
     private var cmd:String
     private var p:Process
     private var pwd:String?
+    private var shouldLog:Boolean
     init {
+        shouldLog = log
         cmd = "dw $execCmd --plugin"
         pwd = wd
         p = com.dashwave.plugin.utils.Process(cmd, pwd, log)
     }
 
     fun executeWithExitCode():Int{
-        this.p.start()
+        this.p.start(this.shouldLog)
         val exitCode = this.p.wait()
         if(exitCode == 11){
             DashwaveWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
@@ -39,8 +42,8 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
         return exitCode
     }
 
-    fun executeWithOutput():String{
-        this.p.start()
+    fun executeWithOutput():Pair<Int,String>{
+        this.p.start(this.shouldLog)
         val exitCode = this.p.wait()
         if(exitCode == 11){
             DashwaveWindow.displayError("Dashwave has a major update, you need to update dependencies\n")
@@ -51,7 +54,7 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
         }
 
         // get the stdout as string
-        return this.p.getOutput()
+        return Pair(exitCode, this.p.getOutput())
     }
 
 
@@ -61,7 +64,7 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
 
 
     fun executeBuild(pwd:String?, openEmulator:Boolean){
-        this.p.start()
+        this.p.start(this.shouldLog)
         DashwaveWindow.disableRunButton()
         DashwaveWindow.enableCancelButton()
         DashwaveWindow.currentBuild = this
@@ -124,6 +127,8 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean){
                     ){}.show()
                 }
             }
+            // common post build flow
+            listModulesAndVariants(pwd)
         }.start()
     }
 }

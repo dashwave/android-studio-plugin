@@ -12,6 +12,8 @@ import com.intellij.notification.*
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.ui.DialogWrapper
+import kotlinx.serialization.json.*
 import java.awt.Color
 import java.io.File
 import java.io.IOException
@@ -58,7 +60,7 @@ fun installDW(pwd: String?){
 
     // Execute the script
     val process = Process("curl -sSL https://cli.dashwave.io | bash", pwd, true)
-    process.start()
+    process.start(false)
     Thread{
         val exitCode = process.wait()
         if (exitCode == 0) {
@@ -79,6 +81,8 @@ fun installDW(pwd: String?){
 }
 
 fun verifyLogin(pwd:String?){
+    listUsers(pwd)
+    DashwaveWindow.addModulesAndVariants(HashMap<String,List<String>>(), "", "")
     val currentUserLoginCmd = DwCmds("user", "", true)
     val exitCode = currentUserLoginCmd.executeWithExitCode()
     if (exitCode == 0){
@@ -90,9 +94,12 @@ fun verifyLogin(pwd:String?){
 }
 
 fun checkProjectConnected(pwd:String?){
+    listUsers(pwd)
     if (doesFileExist("$pwd/dashwave.yml")){
         DashwaveWindow.enableRunButton()
+
         listModulesAndVariants(pwd)
+
         DashwaveWindow.displayOutput("✅ Project is successfully connected to dashwave. Run a cloud build using dashwave icon on toolbar\n\n", ConsoleViewContentType.NORMAL_OUTPUT)
         val dd = ReadyForBuildDialog()
         dd.show()
@@ -105,9 +112,16 @@ fun checkProjectConnected(pwd:String?){
 fun loginUser(pwd:String?) {
     val loginDialog = LoginDialog()
     var accessCode: String = ""
-    if (loginDialog.showAndGet()) {
+
+    loginDialog.show()
+
+    if (loginDialog.exitCode == DialogWrapper.OK_EXIT_CODE) {
         accessCode = loginDialog.getAccessCode()
+    }else if (loginDialog.exitCode == DialogWrapper.CANCEL_EXIT_CODE){
+        // handle cancellation logic if any
+        return
     }
+
     val loginUserCmd = "login $accessCode"
     val exitCode = DwCmds(loginUserCmd, "", true).executeWithExitCode()
     if (exitCode == 0) {
@@ -125,42 +139,49 @@ fun doesFileExist(path: String): Boolean {
     return file.exists()
 }
 
-fun listModulesAndVariants(pwd:String?) {
-    val configsCmd = DwCmds("build configs", pwd, true)
-    var output = configsCmd.executeWithOutput()
-    val ansiEscapeRegex = "\\x1B\\[[;\\d]*m".toRegex()
-    output = output.replace(ansiEscapeRegex, "")
+fun listUsers(pwd: String?){
+    val usersCmd = DwCmds("user ls", pwd, false)
+    val cmdOutput = usersCmd.executeWithOutput()
+    if(cmdOutput.first != 0){
+        DashwaveWindow.displayError("❌ Could not find logged in users\n"+cmdOutput.second)
+        return
+    }
+    val jsonText = cmdOutput.second.trim()
+    val cleanedJsonString = jsonText.dropWhile { it.code <= 32 }
+    println(cleanedJsonString)
+    val jsonObject = Json.parseToJsonElement(cleanedJsonString).jsonObject
 
+    val users = jsonObject["users"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }
+    val activeUser = jsonObject["active_user"]?.toString()
+
+    DashwaveWindow.addUsers(users, activeUser?:"",pwd)
+}
+fun listModulesAndVariants(pwd:String?) {
+    val configsCmd = DwCmds("build configs", pwd, false)
+    var cmdOutput = configsCmd.executeWithOutput()
+    if(cmdOutput.first != 0){
+        DashwaveWindow.displayError("❌ Could not find modules and in variants\n"+cmdOutput.second)
+        return
+    }
+    val jsonText = cmdOutput.second.trim()
+    val cleanedJsonString = jsonText.dropWhile { it.code <= 32 }
+    val jsonObject = Json.parseToJsonElement(cleanedJsonString).jsonObject
     val map = mutableMapOf<String, List<String>>()
     var defaultModule: String = ""
     var defaultVariant: String = ""
-    var foundDefault = false
-
-    // Split the input string by lines
-    val lines = output.split("\n")
-
-    for (line in lines) {
-        // Split each line by ':'
-        val parts = line.split(":").map { it.trim() } // Trim to remove leading/trailing whitespace
-
-        if (parts.size == 2) {
-            // The first part is the project name, and the second part contains the build types
-            val projectName = parts[0]
-            val buildTypes = parts[1].trim('[', ']').split(" ").filter { it.isNotEmpty() }
-
-            // Populate the map
-            if (projectName == "default") {
-                if (buildTypes.size >= 2) {
-                    defaultModule = buildTypes[0]
-                    defaultVariant = buildTypes[1]
-                    foundDefault = true
-                } else {
-                    println("Warning: 'default' project does not contain enough build types.")
-                }
+    var foundDefault:Boolean = false
+    jsonObject.forEach { (key, value) ->
+        val list = value.jsonArray.mapNotNull { it.jsonPrimitive.contentOrNull }
+        if (key == "default"){
+            if (list.size >= 2){
+                defaultModule = list[0]
+                defaultVariant = list[1]
+                foundDefault = true
             } else {
-                map[projectName] = buildTypes
+                println("Warning: 'default' project does not contain enough build types.")
             }
         }
+        map[key] = list
     }
 
     if (!foundDefault && map.isNotEmpty()) {
@@ -198,7 +219,6 @@ fun createProject(projectName: String, devStack:String, rootDir:String,pwd:Strin
     val exitCode = DwCmds(createProjectCmd, pwd, true).executeWithExitCode()
     if(exitCode == 0){
         DashwaveWindow.enableRunButton()
-        listModulesAndVariants(pwd)
         Notifications.Bus.notify(
             Notification(
                 "YourPluginNotificationGroup",

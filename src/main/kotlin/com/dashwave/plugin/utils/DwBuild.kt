@@ -47,7 +47,7 @@ class DwBuild(config: DwBuildConfig){
     private fun execute(){
 //        DashwaveWindow.displayInfo()
         val buildCmd = DwCmds(cmd, pwd, true)
-//        buildCmd.executeBuild(pwd, openEmulator)
+        buildCmd.executeBuild(pwd, openEmulator)
     }
 
     fun killEmulator(){

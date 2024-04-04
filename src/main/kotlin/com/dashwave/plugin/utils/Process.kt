@@ -18,7 +18,9 @@ class Process(cmd:String, pwd:String?, log:Boolean){
     private var ph:ProcessHandler
     private val latch = CountDownLatch(1)
     private val outputBuilder = StringBuilder()
+    private var command:String
     init {
+        command = cmd
         val cmd = GeneralCommandLine("/bin/bash","-c",cmd)
         if(pwd != null && pwd != ""){
             cmd.setWorkDirectory(pwd)
@@ -29,9 +31,13 @@ class Process(cmd:String, pwd:String?, log:Boolean){
         ph = OSProcessHandler(cmd)
         ph.addProcessListener(object:ProcessAdapter(){
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                outputBuilder.append(event.text)
+                val text = event.text.trim()
+                if (text.contains(cmd.commandLineString)){
+                    return
+                }
+                outputBuilder.append(text)
                 if(log) {
-                    decodeAndPrintString(event.text, outputType)
+                    decodeAndPrintString("$text\n", outputType)
                 }
             }
             override fun processTerminated(event: ProcessEvent) {
@@ -41,7 +47,10 @@ class Process(cmd:String, pwd:String?, log:Boolean){
         })
     }
 
-    fun start(){
+    fun start(log: Boolean){
+        if(log){
+            DashwaveWindow.displayInfo("${this.command}\n\n")
+        }
         ph.startNotify()
     }
 

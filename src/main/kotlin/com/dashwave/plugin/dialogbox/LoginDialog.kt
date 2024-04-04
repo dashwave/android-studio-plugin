@@ -3,6 +3,7 @@ package com.dashwave.plugin
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.IconLoader
+import com.intellij.util.IconUtil
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -17,6 +18,10 @@ class LoginDialog : DialogWrapper(true) {
         // TODO: add logo to title
         title = "Authenticate with Dashwave Cloud"
         init()
+
+//        val icon = IconLoader.getIcon("/icons/dashwave13.svg") // Make sure to provide the correct path
+//        val image = IconUtil.toImage(icon)
+//        window.setIconImage(image)
     }
 
     override fun createCenterPanel(): JComponent? {
@@ -29,10 +34,9 @@ class LoginDialog : DialogWrapper(true) {
         gbc.gridy = 0
         gbc.gridwidth = 2
 
-        val icon = IconLoader.getIcon("/icons/dashwave13.svg") // Make sure to provide the correct path
         this.createTitlePane()
 
-        val labelWithIcon = JLabel("Login to Dashwave Cloud by entering your access code", icon, SwingConstants.LEFT)
+//        val labelWithIcon = JLabel("Login to Dashwave Cloud by entering your access code", icon, SwingConstants.LEFT)
 //        panel.add(labelWithIcon, gbc)
 
         val linkHeadLabel = JLabel("Authenticate the plugin with Dashwave cloud using your personal access code")
