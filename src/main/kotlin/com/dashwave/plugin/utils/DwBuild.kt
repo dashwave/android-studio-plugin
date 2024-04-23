@@ -1,5 +1,6 @@
 package com.dashwave.plugin.utils
 
+import com.dashwave.plugin.PluginMode
 import com.dashwave.plugin.doesFileExist
 import com.dashwave.plugin.openCreateProjectDialog
 import com.dashwave.plugin.windows.DashwaveWindow
@@ -22,6 +23,9 @@ class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
     private var pwd:String?
     private var dwWindow:DashwaveWindow
     init {
+        if(PluginMode == "workspace"){
+            cmd += " --workspace"
+        }
         if(config.clean){
             cmd += " --clean"
         }

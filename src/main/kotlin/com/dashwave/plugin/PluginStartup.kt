@@ -28,12 +28,24 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.Anchor
 import com.intellij.openapi.actionSystem.Constraints
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.components.ServiceManager
 import io.ktor.util.*
 import java.awt.Font
 
+var PluginMode:String = ""
+var PluginEnv:String = ""
 class PluginStartup: StartupActivity {
     companion object {
         var dwWindows:HashMap<String, DashwaveWindow> = HashMap()
+        var pluginMode:String = ""
+        var pluginEnv:String = ""
+    }
+
+    init {
+        val pluginConfig = PluginConfiguration.getInstance()
+        pluginMode = pluginConfig.state.pluginMode
+        pluginEnv = pluginConfig.state.pluginEnv
     }
 
     override fun runActivity(project: Project) {
@@ -41,6 +53,8 @@ class PluginStartup: StartupActivity {
         dwWindow.show()
         dwWindows[project.name] = dwWindow
         checkDW(project, dwWindow)
+        PluginMode = pluginMode
+        PluginEnv = pluginEnv
     }
 }
 
@@ -80,14 +94,32 @@ fun installDW(pwd: String?, dwWindow: DashwaveWindow){
         if (exitCode == 0) {
             dwWindow.displayInfo(Messages.DW_DEPS_INSTALL_SUCCESS)
             dwWindow.displayInfo(Messages.DW_DEPS_CONFIGURING)
+
             val configCmd = DwCmds("config", pwd, true, dwWindow)
             val exitcode = configCmd.executeWithExitCode()
             if(exitcode == 0){
+                if(PluginMode == "workspace"){
+                    dwWindow.displayInfo("🔨 Setting up workspace plugin...\n")
+                    var workspaceCmd = "setup-workspace"
+                    if(PluginEnv != ""){
+                        workspaceCmd += " -e ${PluginEnv}"
+                    }
+                    val setupWorkspaceCmd = DwCmds(workspaceCmd, pwd, true, dwWindow)
+                    val exitCode = setupWorkspaceCmd.executeWithExitCode()
+                    if(exitCode == 0){
+                        verifyLogin(pwd, dwWindow)
+                    }else{
+                        dwWindow.displayError("❌ Could not setup plugin. Please contact us at hello@dashwave.io")
+                    }
+                    return@Thread
+                }
+
                 dwWindow.displayInfo(Messages.DW_DEPS_CONFIGURE_SUCCESS)
                 verifyLogin(pwd, dwWindow)
             }else{
                 dwWindow.displayError(Messages.DW_DEPS_CONFIGURE_FAILED)
             }
+
         } else {
             dwWindow.displayError(Messages.DW_DEPS_INSTALL_FAILED)
         }
@@ -103,6 +135,10 @@ fun verifyLogin(pwd:String?, dwWindow: DashwaveWindow){
         dwWindow.enableRunButton()
         checkProjectConnected(pwd, dwWindow)
     }else{
+        if(PluginMode == "workspace") {
+            dwWindow.displayError("❌ User is not setup correctly. Please contact us at hello@dashwave.io")
+            return
+        }
         loginUser(pwd, dwWindow)
     }
 }
@@ -112,6 +148,10 @@ fun checkProjectConnected(pwd:String?, dwWindow: DashwaveWindow){
     // check if .git folder exists
     val gitConfigFilepath = "$pwd/.git"
     if (!doesFileExist(gitConfigFilepath)){
+        if(PluginMode == "workspace"){
+            dwWindow.displayError("❌ There is some issue in setting up your project (.git doesn't exist), please contact us at hello@dashwave.io")
+            return
+        }
         dwWindow.displayOutput("❌ ${Messages.GIT_NOT_CONFIGURED}", ConsoleViewContentType.ERROR_OUTPUT)
         val notif = BalloonNotif(
             "Could not find .git folder",
@@ -133,6 +173,10 @@ fun checkProjectConnected(pwd:String?, dwWindow: DashwaveWindow){
         val dd = ReadyForBuildDialog()
         dd.show()
     }else {
+        if(PluginMode == "worksapce"){
+            dwWindow.displayError("❌ There is some issue in setting up your project (dashwave.yml doesn't exist), please contact us at hello@dashwave.io")
+            return
+        }
         dwWindow.displayOutput("⚠️ This project is not connected to dashwave, create a new project on dashwave\n\n", ConsoleViewContentType.NORMAL_OUTPUT)
         openCreateProjectDialog(pwd, true, dwWindow){}
     }
@@ -151,7 +195,10 @@ fun loginUser(pwd:String?, dwWindow: DashwaveWindow) {
         return
     }
 
-    val loginUserCmd = "login $accessCode"
+    var loginUserCmd = "login $accessCode"
+    if(PluginEnv != ""){
+        loginUserCmd += " -e $PluginEnv"
+    }
     val exitCode = DwCmds(loginUserCmd, pwd, true, dwWindow).executeWithExitCode()
     if (exitCode == 0) {
         dwWindow.enableRunButton()

@@ -1,5 +1,6 @@
 package com.dashwave.plugin.windows
 
+import com.dashwave.plugin.PluginStartup
 import com.dashwave.plugin.components.CollapseMenu
 import com.dashwave.plugin.loginUser
 import com.dashwave.plugin.actions.BuildAction
@@ -18,6 +19,7 @@ import com.intellij.ui.content.ContentFactory
 import java.awt.BorderLayout
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.AnimatedIcon
@@ -155,7 +157,9 @@ class DashwaveWindow(project: Project){
             usersList.addItem("No users logged in")
             return
         }
-        usersList.isEnabled = true
+        if(PluginStartup.pluginMode != "workspace"){
+            usersList.isEnabled = true
+        }
         users?.forEach{ user ->
             usersList.addItem(user)
         }
@@ -228,6 +232,7 @@ class DashwaveWindow(project: Project){
         val actionToolbar = JToolBar(JToolBar.HORIZONTAL)
         runButton = JButton(AllIcons.Actions.RunAll)
         runButton.addActionListener {
+            FileDocumentManager.getInstance().saveAllDocuments();
             val configs = getBuildConfigs(this.p)
             val build = DwBuild(configs, this)
             build.run(p)
@@ -290,6 +295,10 @@ class DashwaveWindow(project: Project){
         addUserBtn.setSize(10,10)
         userGroup.add(addUserBtn)
         actionToolbar.add(userGroup)
+        if(PluginStartup.pluginMode == "workspace") {
+            addUserBtn.isEnabled = false
+            usersList.isEnabled = false
+        }
 
         openEmulatorCheckbox.isSelected = true
 
