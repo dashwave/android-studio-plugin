@@ -1,5 +1,6 @@
 package com.dashwave.plugin.dialogbox
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.LabeledComponent
@@ -8,7 +9,7 @@ import com.intellij.ui.layout.panel
 import java.awt.*
 import javax.swing.*
 
-class CreateProjectDialog: DialogWrapper(true) {
+class CreateProjectDialog(project: Project): DialogWrapper(project) {
     private val projectNameTextField = JTextField()
     private val rootModulePathTextField = JTextField("./")
     private val nativeRadioButton = JRadioButton("Native (Java/Kotlin)")
@@ -17,12 +18,12 @@ class CreateProjectDialog: DialogWrapper(true) {
     private val projectTypeButtonGroup = ButtonGroup()
 
     init {
+        init()
         title = "New Dashwave Project"
         projectTypeButtonGroup.add(nativeRadioButton)
         projectTypeButtonGroup.add(flutterRadioButton)
         projectTypeButtonGroup.add(rNativeRadioButton)
         nativeRadioButton.isSelected = true
-        init()
     }
 
     override fun createCenterPanel(): JComponent? {
@@ -84,7 +85,7 @@ class CreateProjectDialog: DialogWrapper(true) {
         return when{
             nativeRadioButton.isSelected -> "GRADLE"
             flutterRadioButton.isSelected -> "FLUTTER"
-            nativeRadioButton.isSelected -> "REACTNATIVE"
+            rNativeRadioButton.isSelected -> "REACTNATIVE"
             else -> ""
         }
     }
