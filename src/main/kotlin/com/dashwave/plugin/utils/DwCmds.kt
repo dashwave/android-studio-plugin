@@ -9,15 +9,7 @@ import com.dashwave.plugin.windows.DashwaveWindow
 import com.intellij.execution.filters.HyperlinkInfo
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.keymap.impl.ui.Hyperlink
 import com.intellij.openapi.project.Project
-import com.intellij.util.Futures.thenRunAsync
-import okhttp3.internal.wait
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
-import kotlin.system.exitProcess
 
 class DwCmds(execCmd:String, wd:String?, log: Boolean, dwWindow: DashwaveWindow){
     private var cmd:String

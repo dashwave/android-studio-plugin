@@ -41,7 +41,7 @@ class DashwaveWindow(project: Project){
     lateinit var runButton: JButton
     lateinit var cancelButton: JButton
     lateinit var p: Project
-    var dwIcon: Icon = IconLoader.getIcon("/icons/dashwave13.svg")
+    var dwIcon: Icon = IconLoader.getIcon("/icons/dashwave13.svg", DashwaveWindow::class.java.classLoader)
     var loadIcon: Icon = AnimatedIcon.Default()
     var runEnabled = false
     private  var cleanBuildCheckbox:JCheckBox = JCheckBox("Clean Build")
@@ -66,7 +66,7 @@ class DashwaveWindow(project: Project){
             ToolWindowAnchor.BOTTOM  // The anchor location
         )
         window = toolWindow
-        toolWindow.setIcon(IconLoader.getIcon("/icons/dashwave13.svg"))
+        toolWindow.setIcon(IconLoader.getIcon("/icons/dashwave13.svg", DashwaveWindow::class.java.classLoader))
         createToolWindowContent()
     }
 

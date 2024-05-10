@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.dashwave"
-version = "2.3.3"
+version = "3.0.0"
 
 repositories {
     mavenCentral()
@@ -18,7 +18,7 @@ dependencies {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version.set("2022.2.5")
+    version.set("2024.1.1")
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
@@ -35,8 +35,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("222")
-        untilBuild.set("232.*")
+        sinceBuild.set("201.*")
+        untilBuild.set("241.*")
     }
 
     signPlugin {

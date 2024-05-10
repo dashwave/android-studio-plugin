@@ -17,7 +17,7 @@ class ReadyForBuildDialog : DialogWrapper(true) {
         val dialogPanel = JPanel()
 
         // Load the image icon
-        val icon = IconLoader.getIcon("/icons/dashwave13.svg")
+        val icon = IconLoader.getIcon("/icons/dashwave13.svg", ReadyForBuildDialog::class.java.classLoader)
         val iconLabel = JLabel(icon)
 
         // Add components to the panel

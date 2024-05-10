@@ -35,7 +35,7 @@ class CreateProjectDialog(project: Project): DialogWrapper(project) {
         gbc.gridx = 0
         gbc.gridy = 0
         gbc.gridwidth = 2
-        val icon = IconLoader.getIcon("/icons/dashwave13.svg") // Make sure to provide the correct path
+        val icon = IconLoader.getIcon("/icons/dashwave13.svg", CreateProjectDialog::class.java.classLoader) // Make sure to provide the correct path
         val labelWithIcon = JLabel("Create a new project to be able to run builds on dashwave", icon, SwingConstants.LEFT)
         panel.add(labelWithIcon, gbc)
 
