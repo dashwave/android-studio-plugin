@@ -39,13 +39,14 @@ class DashwaveWindow(project: Project){
     var currentBuild:DwCmds? = null
     lateinit var console: ConsoleView
     lateinit var runButton: JButton
+    lateinit var debugButton: JButton
     lateinit var cancelButton: JButton
     lateinit var p: Project
     var dwIcon: Icon = IconLoader.getIcon("/icons/dashwave13.svg", DashwaveWindow::class.java.classLoader)
     var loadIcon: Icon = AnimatedIcon.Default()
     var runEnabled = false
     private  var cleanBuildCheckbox:JCheckBox = JCheckBox("Clean Build")
-    private  var debugEnabledCheckBox: JCheckBox = JCheckBox("Enable Debug")
+    private  var verboseEnabledCheckBox: JCheckBox = JCheckBox("Verbose")
     private  var openEmulatorCheckbox:JCheckBox = JCheckBox("Open Emulator")
     var window:ToolWindow? = null
     private var buildOpts = CollapseMenu("Build opts")
@@ -84,7 +85,7 @@ class DashwaveWindow(project: Project){
 
     fun getBuildConfigs(p:Project):DwBuildConfig{
         val cleanBuild = cleanBuildCheckbox.isSelected
-        val debugEnabled = debugEnabledCheckBox.isSelected
+        val debugEnabled = verboseEnabledCheckBox.isSelected
         val openEmulator = openEmulatorCheckbox.isSelected
         val module: String = selectedModule
         val variant: String = selectedVariant
@@ -107,16 +108,18 @@ class DashwaveWindow(project: Project){
     fun disableRunButton(){
         runEnabled = false
         runButton.isEnabled = false
+        debugButton.isEnabled = false
         cleanBuildCheckbox.isEnabled = false
-        debugEnabledCheckBox.isEnabled = false
+        verboseEnabledCheckBox.isEnabled = false
         openEmulatorCheckbox.isEnabled = false
     }
 
     fun enableRunButton(){
         runEnabled = true
         runButton.isEnabled = true
+        debugButton.isEnabled = true
         cleanBuildCheckbox.isEnabled = true
-        debugEnabledCheckBox.isEnabled = true
+        verboseEnabledCheckBox.isEnabled = true
         openEmulatorCheckbox.isEnabled = true
     }
 
@@ -190,11 +193,11 @@ class DashwaveWindow(project: Project){
         modulesList.isEnabled = true
         variantsList.isEnabled = true
 
-        modulesList.addItem(defaultModule)
-        variantsList.addItem(defaultVariant)
+        modulesList.addItem(defaultModule.lowercase())
+        variantsList.addItem(defaultVariant.lowercase()ri   )
 
         modulesVariants.keys.toTypedArray().forEach { module ->
-            modulesList.addItem(module)
+            modulesList.addItem(module.lowercase())
         }
 
         modulesList.addItemListener(ItemListener {
@@ -206,7 +209,7 @@ class DashwaveWindow(project: Project){
                 selectedModule = modulesList.selectedItem as String
                 variantsList.removeAllItems()
                 modulesVariants[selectedModule]?.forEach { variant ->
-                    variantsList.addItem(variant)
+                    variantsList.addItem(variant.lowercase())
                 }
             }
         })
@@ -238,6 +241,15 @@ class DashwaveWindow(project: Project){
             build.run(p)
         }
 
+        debugButton = JButton(AllIcons.Actions.StartDebugger)
+        debugButton.addActionListener {
+            FileDocumentManager.getInstance().saveAllDocuments();
+            val configs = getBuildConfigs(this.p)
+            configs.attachDebugger = true
+            val build = DwBuild(configs, this)
+            build.run(p)
+        }
+
         cancelButton = JButton(AllIcons.Actions.Cancel)
         cancelButton.addActionListener{
             disableCancelButton()
@@ -250,6 +262,7 @@ class DashwaveWindow(project: Project){
 
 
         actionToolbar.add(runButton)
+        actionToolbar.add(debugButton)
         actionToolbar.add(cancelButton)
         disableCancelButton()
         disableRunButton()
@@ -264,8 +277,8 @@ class DashwaveWindow(project: Project){
 //        val optionTitle = JLabel("Build Options")
 //        optionToolbar.add(optionTitle)
         buildOpts.add(cleanBuildCheckbox)
-        buildOpts.add(debugEnabledCheckBox)
         buildOpts.add(openEmulatorCheckbox)
+        buildOpts.add(verboseEnabledCheckBox)
 
         optsGroup.add(buildOpts.getComponent())
 

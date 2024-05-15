@@ -15,6 +15,7 @@ class DwBuildConfig(clean:Boolean,debug:Boolean,openEmulator:Boolean,module:Stri
     var pwd:String? = pwd
     var module:String = module
     var variant:String = variant
+    var attachDebugger:Boolean = false
 }
 
 class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
@@ -22,6 +23,7 @@ class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
     private val openEmulator:Boolean
     private var pwd:String?
     private var dwWindow:DashwaveWindow
+    private var attachDebugger:Boolean = false
     init {
         if(PluginMode == "workspace"){
             cmd += " --workspace"
@@ -40,9 +42,13 @@ class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
         if (config.variant != ""){
             cmd += " --variant ${config.variant}"
         }
+        if (config.attachDebugger){
+            cmd += " --attach-debugger"
+        }
 
         pwd = config.pwd
         openEmulator = config.openEmulator
+        attachDebugger = config.attachDebugger
         this.dwWindow = dwWindow
     }
 
@@ -53,7 +59,7 @@ class DwBuild(config: DwBuildConfig, dwWindow: DashwaveWindow){
     private fun execute(){
 //        DashwaveWindow.displayInfo()
         val buildCmd = DwCmds(cmd, pwd, true, this.dwWindow)
-        buildCmd.executeBuild(pwd, openEmulator)
+        buildCmd.executeBuild(pwd, openEmulator,attachDebugger)
     }
 
     fun killEmulator(){

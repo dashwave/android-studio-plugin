@@ -58,8 +58,14 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean, dwWindow: DashwaveWindow)
         this.p.exit()
     }
 
+    fun executeBg(){
+        Thread{
+            this.p.start(this.shouldLog)
+        }.start()
+    }
 
-    fun executeBuild(pwd:String?, openEmulator:Boolean){
+
+    fun executeBuild(pwd:String?, openEmulator:Boolean, attachDebugger:Boolean){
         this.p.start(this.shouldLog)
         this.dwWindow.disableRunButton()
         this.dwWindow.enableCancelButton()
@@ -91,7 +97,7 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean, dwWindow: DashwaveWindow)
 //                        BrowserUtil.browse("https://console.dashwave.io/home?profile=true")
                     }.show(dwWindow.p)
 
-                    if(openEmulator){
+                    if(!attachDebugger && openEmulator){
                         val emulatorCmd = DwCmds("emulator", pwd, false, this.dwWindow)
                         this.dwWindow.lastEmulatorProcess = emulatorCmd
                         val ex = emulatorCmd.executeWithExitCode()
@@ -130,6 +136,26 @@ class DwCmds(execCmd:String, wd:String?, log: Boolean, dwWindow: DashwaveWindow)
                         loginUser(pwd, this.dwWindow)
                     }
                     this.dwWindow.console.printHyperlink("Login here\n\n", hyperlink)
+                }
+                14 -> {
+                    BalloonNotif(
+                        "Build Successful",
+                        "",
+                        "Build completed, attaching debugger",
+                        NotificationType.INFORMATION
+                    ){
+//                        BrowserUtil.browse("https://console.dashwave.io/home?profile=true")
+                    }.show(dwWindow.p)
+                    println("attaching debugger")
+                    if(attachDebugger){
+                        val debuggerCmd = DwCmds("get-debugger", pwd, true, this.dwWindow)
+                        debuggerCmd.executeBg()
+                    }
+                    if(openEmulator){
+                        val emulatorCmd = DwCmds("emulator", pwd, false, this.dwWindow)
+                        this.dwWindow.lastEmulatorProcess = emulatorCmd
+                        val ex = emulatorCmd.executeWithExitCode()
+                    }
                 }
                 else -> {
                     // add try again
