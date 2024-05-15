@@ -194,7 +194,7 @@ class DashwaveWindow(project: Project){
         variantsList.isEnabled = true
 
         modulesList.addItem(defaultModule.lowercase())
-        variantsList.addItem(defaultVariant.lowercase()ri   )
+        variantsList.addItem(defaultVariant.lowercase())
 
         modulesVariants.keys.toTypedArray().forEach { module ->
             modulesList.addItem(module.lowercase())
