@@ -84,7 +84,7 @@
             <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunnerActions"/>
         </action>
         <action id="com.dashwave.plugin.actions.RunDebugAction" class="com.dashwave.plugin.actions.RunDebugAction" text="DW Debug"
-                description="dw-run-debugger" icon="icons/dashwave16.svg">
+                description="dw-run-debugger" icon="icons/debugger16.svg">
             <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunnerActions"/>
         </action>
     </actions>

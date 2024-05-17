@@ -12,11 +12,11 @@ class RunDebugAction : AnAction(){
         // Enable or disable the action based on your condition
 
         presentation.isEnabled = PluginStartup.dwWindows?.get(e.project?.name)?.runEnabled?:false
-        presentation.text = "Run build on dashwave"
-        presentation.description = "Run build on dashwave"
+        presentation.text = "Run debugger on dashwave"
+        presentation.description = "Run debugger on dashwave"
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        PluginStartup.dwWindows?.get(e.project?.name)?.runButton?.doClick()
+        PluginStartup.dwWindows?.get(e.project?.name)?.debugButton?.doClick()
     }
 }
