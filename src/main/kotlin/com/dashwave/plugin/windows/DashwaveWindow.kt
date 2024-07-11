@@ -204,6 +204,7 @@ class DashwaveWindow(project: Project){
             if (it.stateChange == ItemEvent.SELECTED) {
                 if(it.item.toString().contains("modules detected")){
                     selectedModule = ""
+                    selectedVariant = ""
                     return@ItemListener
                 }
                 selectedModule = modulesList.selectedItem as String
@@ -218,6 +219,7 @@ class DashwaveWindow(project: Project){
             if (it.stateChange == ItemEvent.SELECTED) {
                 if(it.item.toString() == "variants detected"){
                     selectedVariant = ""
+                    selectedModule = ""
                     return@ItemListener
                 }
                 selectedVariant = variantsList.selectedItem as String
