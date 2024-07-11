@@ -62,7 +62,6 @@ class PluginStartup: StartupActivity {
         if(pluginMode == "workspace"){
             terminateGradleSync(project.basePath, dwWindow)
         }
-        terminateGradleSync(project?.basePath, dwWindow)
         PluginMode = pluginMode
         PluginEnv = pluginEnv
     }
