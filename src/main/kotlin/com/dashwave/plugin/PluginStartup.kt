@@ -149,7 +149,9 @@ fun checkProjectConnected(pwd:String?, dwWindow: DashwaveWindow){
     val gitConfigFilepath = "$pwd/.git"
     if (!doesFileExist(gitConfigFilepath)){
         if(PluginMode == "workspace"){
-            dwWindow.displayError("❌ There is some issue in setting up your project (.git doesn't exist), please contact us at hello@dashwave.io")
+            listModulesAndVariants(pwd, dwWindow);
+            // workspaces from template don't need .git folder
+//            dwWindow.displayError("❌ There is some issue in setting up your project (.git doesn't exist), please contact us at hello@dashwave.io")
             return
         }
         dwWindow.displayOutput("❌ ${Messages.GIT_NOT_CONFIGURED}", ConsoleViewContentType.ERROR_OUTPUT)
@@ -237,7 +239,7 @@ fun listModulesAndVariants(pwd:String?, dwWindow: DashwaveWindow) {
     val configsCmd = DwCmds("build configs", pwd, false, dwWindow)
     var cmdOutput = configsCmd.executeWithOutput()
     if(cmdOutput.first != 0){
-        dwWindow.displayError("❌ Could not find modules and in variants\n"+cmdOutput.second)
+//        dwWindow.displayError("❌ Could not find modules and in variants\n"+cmdOutput.second)
         return
     }
     val jsonText = cmdOutput.second.trim()
