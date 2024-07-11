@@ -32,6 +32,10 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ServiceManager
 import io.ktor.util.*
 import java.awt.Font
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import javax.swing.SwingUtilities
 
 var PluginMode:String = ""
 var PluginEnv:String = ""
@@ -53,8 +57,62 @@ class PluginStartup: StartupActivity {
         dwWindow.show()
         dwWindows[project.name] = dwWindow
         checkDW(project, dwWindow)
+
+//      start terminate gradle sync worker if pluginMode is 'workspace'
+        if(pluginMode == "workspace"){
+            terminateGradleSync(project.basePath, dwWindow)
+        }
         PluginMode = pluginMode
         PluginEnv = pluginEnv
+    }
+}
+
+fun terminateGradleSync(pwd: String?, dwWindow: DashwaveWindow) {
+    println("Attempting to terminate Gradle sync...")
+
+    GlobalScope.launch {
+        var attempt = 0
+        val maxAttempts = 5
+        val delayTime = 500L // 1 seconds delay
+
+        while (attempt < maxAttempts) {
+            try {
+                val processBuilder = ProcessBuilder("./gradlew", "--stop")
+                if (pwd != null) {
+                    processBuilder.directory(File(pwd))
+                }
+                processBuilder.redirectErrorStream(true)
+                val process = processBuilder.start()
+
+                val exitCode = process.waitFor()
+                println("Process exit code: $exitCode")
+
+                SwingUtilities.invokeLater {
+                    if (exitCode == 0) {
+                        println("Rendering Dashwave window to hide sync")
+                        dwWindow.show()
+//                    break
+                    } else {
+                        dwWindow.displayInfo(Messages.GRADLE_SYNC_CANCELLATION_FAILED)
+                    }
+                }
+            } catch (e: Exception) {
+                println("Exception occurred: ${e.message}")
+                dwWindow.displayInfo("Failed to start the process: ${e.message}")
+            }
+
+            attempt++
+            if (attempt < maxAttempts) {
+                println("Retrying in $delayTime milliseconds... (Attempt $attempt of $maxAttempts)")
+                delay(delayTime)
+            } else {
+                println("Max retry attempts reached.")
+            }
+        }
+    }
+
+    SwingUtilities.invokeLater {
+        dwWindow.show()
     }
 }
 
@@ -175,7 +233,7 @@ fun checkProjectConnected(pwd:String?, dwWindow: DashwaveWindow){
         val dd = ReadyForBuildDialog()
         dd.show()
     }else {
-        if(PluginMode == "worksapce"){
+        if(PluginMode == "workspace"){
             dwWindow.displayError("❌ There is some issue in setting up your project (dashwave.yml doesn't exist), please contact us at hello@dashwave.io")
             return
         }
