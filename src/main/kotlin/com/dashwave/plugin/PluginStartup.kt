@@ -58,7 +58,10 @@ class PluginStartup: StartupActivity {
         dwWindows[project.name] = dwWindow
         checkDW(project, dwWindow)
 
-//      start terminate gradle sync worker
+//      start terminate gradle sync worker if pluginMode is 'workspace'
+        if(pluginMode == "workspace"){
+            terminateGradleSync(project.basePath, dwWindow)
+        }
         terminateGradleSync(project?.basePath, dwWindow)
         PluginMode = pluginMode
         PluginEnv = pluginEnv
