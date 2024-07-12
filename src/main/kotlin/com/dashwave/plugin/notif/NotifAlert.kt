@@ -23,7 +23,7 @@ class BalloonNotif(title:String, actionTitle:String ,description:String,type: No
         this.type = type
         this.actionTitle = actionTitle
     }
-    fun show() {
+    fun show(project:Project) {
         val notification = Notification(
             "YourPluginNotificationGroup",
             this.title,
@@ -37,6 +37,6 @@ class BalloonNotif(title:String, actionTitle:String ,description:String,type: No
                 }
             })
         }
-        Notifications.Bus.notify(notification, DashwaveWindow.p)
+        Notifications.Bus.notify(notification, project)
     }
 }
